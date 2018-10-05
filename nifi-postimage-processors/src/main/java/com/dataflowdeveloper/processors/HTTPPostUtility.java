@@ -33,13 +33,21 @@ public class HTTPPostUtility {
 	public static HTTPPostResults postImage(String urlName, String fieldName, String imageName, String imageType,
 			InputStream stream) {
 
+		if ( urlName == null || fieldName == null || imageName == null || imageType == null || stream == null ) {
+			return null;
+		}
+		
 		HTTPPostResults results = new HTTPPostResults();
 
-		if ( urlName == null || fieldName == null || imageName == null || imageType == null || stream == null ) {
-			System.out.println("Nulls");
-			return results;
-		}
 		try {
+			/** Do we want a timeout
+			// do we want to allow users to set this
+			// connectionTimeout
+			// connectionTimeout
+			// http://unirest.io/java.html
+			*/
+			Unirest.setTimeouts(90000, 180000);
+			
 			HttpResponse<JsonNode> resp = Unirest.post(urlName)
 					.field(fieldName, stream, ContentType.parse(imageType), imageName).asJson();
 
@@ -51,16 +59,20 @@ public class HTTPPostUtility {
 				}
 			}
 
-			results.setHeader( resp.getHeaders().toString() );
-			results.setStatus(resp.getStatusText());
-			
-			System.out.println("results found");
-			
-			try {
-				Unirest.shutdown();
-			} catch (IOException e) {
-				e.printStackTrace();
+			if ( resp.getHeaders() != null) { 
+				results.setHeader( resp.getHeaders().toString() );
 			}
+			if ( resp.getStatusText() != null ) { 
+				results.setStatus(resp.getStatusText());
+			}
+			
+			results.setStatusCode(resp.getStatus());
+			
+//			try {
+//				Unirest.shutdown();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}

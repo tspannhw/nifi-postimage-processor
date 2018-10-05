@@ -49,18 +49,20 @@ import java.util.Set;
 @CapabilityDescription("Post Image to HTTP")
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute="url, fieldname, imagename, imagetype", description="Need URL, Field Name, Image Name and Image Type.")})
-@WritesAttributes({@WritesAttribute(attribute="post.results, post.header, post.status", description="Output result of HTTP Post call.")})
+@WritesAttributes({@WritesAttribute(attribute="post.results, post.header, post.status, post.statuscode", description="Output result of HTTP Post call.")})
 public class PostImageProcessor extends AbstractProcessor {
 
 	/** output attribute name post.results will contain JSON **/
 	public static final String ATTRIBUTE_OUTPUT_NAME = "post.results";
 
-	/** output attribute name post.results will contain JSON **/
+	/** output attribute name post.header will contain JSON **/
 	public static final String ATTRIBUTE_OUTPUT_HEADER = "post.header";
 	
-	/** output attribute name post.results will contain JSON **/
+	/** output attribute name post.status will contain JSON **/
 	public static final String ATTRIBUTE_OUTPUT_STATUS = "post.status";
-	
+
+	/** output attribute name post.statuscode will contain JSON **/
+	public static final String ATTRIBUTE_OUTPUT_STATUS_CODE = "post.statuscode";
 	
 	/** url http://127.0.0.1:9999/squeezenet/predict  */
 	public static final PropertyDescriptor URL_NAME = new PropertyDescriptor.Builder().name("url")
@@ -181,27 +183,37 @@ public class PostImageProcessor extends AbstractProcessor {
 				session.read(flowFile, new InputStreamCallback() {
 					@Override
 					public void process(InputStream input) throws IOException {
+						if ( input == null ) { 
+							return;
+						}
 						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input);
 						
-						if (results != null) {
+						if (results != null && results.getJsonResultBody() != null) {
 							try {
-								getLogger().debug(String.format("Found %sresults", new Object[] { results.getStatus() }));
-
-								System.out.println("Status=" + results.getStatus());
 								attributes.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
 								attributes.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
 								attributes.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
+								attributes.put(ATTRIBUTE_OUTPUT_STATUS_CODE, String.valueOf(results.getStatusCode()));
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
 						}
+						else {
+							try {
+								System.out.println("====> url" + url + "," + field + ","+ image + "," + imgtype );
+								attributes.put(ATTRIBUTE_OUTPUT_NAME, "Fail");
+								attributes.put(ATTRIBUTE_OUTPUT_HEADER, "Fail");
+								attributes.put(ATTRIBUTE_OUTPUT_STATUS, "FAIL");
+								attributes.put(ATTRIBUTE_OUTPUT_STATUS_CODE, "500");
+							} catch (Exception e) {
+								e.printStackTrace();
+							}							
+						}
 					}
 				});
 				if (attributes.size() == 0) {
-					System.out.println("Errors");
 					session.transfer(flowFile, REL_FAILURE);
 				} else {
-					System.out.println("count:" + attributes.size());
 					flowFile = session.putAllAttributes(flowFile, attributes);
 					session.transfer(flowFile, REL_SUCCESS);
 				}

@@ -17,6 +17,28 @@ public class HTTPPostResults implements Serializable {
 	private String header;
 	private String status;
 	private String jsonResultBody;
+	private int statusCode;
+	
+	/**
+	 * 
+	 * @param header
+	 * @param status
+	 * @param jsonResultBody
+	 * @param statusCode
+	 */
+	public HTTPPostResults(String header, String status, String jsonResultBody, int statusCode) {
+		super();
+		this.header = header;
+		this.status = status;
+		this.jsonResultBody = jsonResultBody;
+		this.statusCode = statusCode;
+	}
+	public int getStatusCode() {
+		return statusCode;
+	}
+	public void setStatusCode(int statusCode) {
+		this.statusCode = statusCode;
+	}
 	public String getHeader() {
 		return header;
 	}
@@ -93,6 +115,8 @@ public class HTTPPostResults implements Serializable {
 		builder.append(status);
 		builder.append(", jsonResultBody=");
 		builder.append(jsonResultBody);
+		builder.append(", statusCode=");
+		builder.append(statusCode);
 		builder.append("]");
 		return builder.toString();
 	}	
