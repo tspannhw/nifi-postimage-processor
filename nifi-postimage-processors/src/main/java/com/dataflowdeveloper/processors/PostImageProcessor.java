@@ -184,17 +184,24 @@ public class PostImageProcessor extends AbstractProcessor {
 						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input);
 						
 						if (results != null) {
-							getLogger().debug(String.format("Found %sresults", new Object[] { results.getStatus() }));
+							try {
+								getLogger().debug(String.format("Found %sresults", new Object[] { results.getStatus() }));
 
-							attributes.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
-							attributes.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
-							attributes.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
+								System.out.println("Status=" + results.getStatus());
+								attributes.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
+								attributes.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
+								attributes.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 						}
 					}
 				});
 				if (attributes.size() == 0) {
+					System.out.println("Errors");
 					session.transfer(flowFile, REL_FAILURE);
 				} else {
+					System.out.println("count:" + attributes.size());
 					flowFile = session.putAllAttributes(flowFile, attributes);
 					session.transfer(flowFile, REL_SUCCESS);
 				}

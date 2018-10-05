@@ -35,6 +35,10 @@ public class HTTPPostUtility {
 
 		HTTPPostResults results = new HTTPPostResults();
 
+		if ( urlName == null || fieldName == null || imageName == null || imageType == null || stream == null ) {
+			System.out.println("Nulls");
+			return results;
+		}
 		try {
 			HttpResponse<JsonNode> resp = Unirest.post(urlName)
 					.field(fieldName, stream, ContentType.parse(imageType), imageName).asJson();
@@ -49,6 +53,8 @@ public class HTTPPostUtility {
 
 			results.setHeader( resp.getHeaders().toString() );
 			results.setStatus(resp.getStatusText());
+			
+			System.out.println("results found");
 			
 			try {
 				Unirest.shutdown();
