@@ -16,24 +16,81 @@
  */
 package com.dataflowdeveloper.processors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.nifi.util.MockFlowFile;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
 
+/**
+ * 
+ * @author tspann
+ *
+ */
 public class PostImageProcessorTest {
 
+	/**
+	 * 
+	 */
     private TestRunner testRunner;
 
+    /**
+     * 
+     */
     @Before
     public void init() {
         testRunner = TestRunners.newTestRunner(PostImageProcessor.class);
     }
 
+    /**
+     * Test is integration and requires a server running.
+     */
     @Test
     public void testProcessor() {
-
+//    	testRunner.setProperty("url", "http://127.0.0.1:9999/squeezenet/predict");
+//    	testRunner.setProperty("fieldname", "data");
+//    	testRunner.setProperty("imagename", "IMG_2596.jpg");
+//    	testRunner.setProperty("imagetype", "image/jpeg");
+//    
+//    	testRunner.enqueue(this.getClass().getClassLoader().getResourceAsStream("IMG_2596.jpg"));
+//    	
+//    	runAndAssertHappy();
     }
 
+    /**
+     * 
+     */
+	private void runAndAssertHappy() {
+		testRunner.setValidateExpressionUsage(false);
+		testRunner.run();
+		testRunner.assertValid();
+		testRunner.assertAllFlowFilesTransferred(PostImageProcessor.REL_SUCCESS);
+		List<MockFlowFile> successFiles = testRunner.getFlowFilesForRelationship(PostImageProcessor.REL_SUCCESS);
+
+		for (MockFlowFile mockFile : successFiles) {
+//			assertEquals("giant panda", mockFile.getAttribute("label_1"));
+//			assertEquals("95.23%", mockFile.getAttribute("probability_1"));
+			assertNotNull(mockFile.getAttribute("post.header"));
+			assertNotNull(mockFile.getAttribute("post.results"));
+			assertEquals("OK", mockFile.getAttribute("post.status"));
+			
+			Map<String, String> attributes =  mockFile.getAttributes();
+			
+			 for (String attribute : attributes.keySet()) {				 
+				 System.out.println("Attribute:" + attribute + " = " + mockFile.getAttribute(attribute));
+			 }
+		}
+
+	}
 }
