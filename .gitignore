@@ -1,5 +1,8 @@
 target/
 .idea
+.idea/
+/.idea/
+*/.idea/*
 /images/
 *.png
 *.gif
