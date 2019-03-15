@@ -2,6 +2,8 @@ package com.dataflowdeveloper.processors;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+
 import org.apache.http.entity.ContentType;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
@@ -31,7 +33,8 @@ public class HTTPPostUtility {
 	 * @return JSON results from the POST
 	 */
 	public static HTTPPostResults postImage(String urlName, String fieldName, String imageName, String imageType,
-			InputStream stream) {
+											InputStream stream, String headerName, String headerValue,
+											String basicUsername, String basicPassword) {
 
 		if ( urlName == null || fieldName == null || imageName == null || imageType == null || stream == null ) {
 			return null;
@@ -45,11 +48,33 @@ public class HTTPPostUtility {
 			// connectionTimeout
 			// connectionTimeout
 			// http://unirest.io/java.html
+
+			 Need base auth
+
+			 .basicAuth("username", "password")
+
+			 add
+
+			 headers
+
+			 .header("accept", "application/json")
+
 			*/
 			Unirest.setTimeouts(90000, 180000);
 			
-			HttpResponse<JsonNode> resp = Unirest.post(urlName)
-					.field(fieldName, stream, ContentType.parse(imageType), imageName).asJson();
+			HttpResponse<JsonNode> resp = null;
+
+			if (headerName == null || headerName.length() <= 0 || headerValue == null || headerValue.length() <= 0) {
+				resp = Unirest.post(urlName)
+						.field(fieldName, stream, ContentType.parse(imageType), imageName)
+						.asJson();
+			}
+			else {
+				resp = Unirest.post(urlName)
+						.header(headerName,headerValue)
+						.field(fieldName, stream, ContentType.parse(imageType), imageName)
+						.asJson();
+			}
 
 			if (resp.getBody() != null && resp.getBody().getArray() != null && resp.getBody().getArray().length() > 0) {
 				for (int i = 0; i < resp.getBody().getArray().length(); i++) {

@@ -48,7 +48,7 @@ import java.util.Set;
 @Tags({"post images"})
 @CapabilityDescription("Post Image to HTTP")
 @SeeAlso({})
-@ReadsAttributes({@ReadsAttribute(attribute="url, fieldname, imagename, imagetype", description="Need URL, Field Name, Image Name and Image Type.")})
+@ReadsAttributes({@ReadsAttribute(attribute="url, fieldname, imagename, imagetype, headername, headervalue, basicusername, basicuserpassword", description="Need URL, Field Name, Image Name and Image Type.  Headers and User information is additional.")})
 @WritesAttributes({@WritesAttribute(attribute="post.results, post.header, post.status, post.statuscode", description="Output result of HTTP Post call.")})
 public class PostImageProcessor extends AbstractProcessor {
 
@@ -83,8 +83,31 @@ public class PostImageProcessor extends AbstractProcessor {
 	public static final PropertyDescriptor IMAGE_TYPE = new PropertyDescriptor.Builder().name("imagetype")
 			.description("Image Type like image/jpeg").required(true)
 			.addValidator(StandardValidators.NON_EMPTY_VALIDATOR).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).build();
-	
-	
+
+	/** header name */
+	public static final PropertyDescriptor HEADER_NAME = new PropertyDescriptor.Builder().name("headername")
+			.description("header name like Accept").required(false)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+			.expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).build();
+
+	/** header value */
+	public static final PropertyDescriptor HEADER_VALUE = new PropertyDescriptor.Builder().name("headervalue")
+			.description("Header Value like json").required(false)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+			.expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).build();
+
+	/** basic username steve */
+	public static final PropertyDescriptor BASIC_USERNAME = new PropertyDescriptor.Builder().name("basicusername")
+			.description("basic http username like susan").required(false)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+			.expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).build();
+
+	/** basic password toast */
+	public static final PropertyDescriptor BASIC_PASSWORD = new PropertyDescriptor.Builder().name("basicpassword")
+			.description("basic http password like iscool").required(false)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+			.expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).build();
+
 	/** Success of Relationship */
 	public static final Relationship REL_SUCCESS = new Relationship.Builder().name("success")
 			.description("Successfully determined image.").build();
@@ -107,6 +130,10 @@ public class PostImageProcessor extends AbstractProcessor {
 		descriptors.add(FIELD_NAME);
 		descriptors.add(IMAGE_NAME);
 		descriptors.add(IMAGE_TYPE);
+		descriptors.add(HEADER_NAME);
+		descriptors.add(HEADER_VALUE);
+		descriptors.add(BASIC_USERNAME);
+		descriptors.add(BASIC_PASSWORD);
 		
 		this.descriptors = Collections.unmodifiableList(descriptors);
 
@@ -171,12 +198,36 @@ public class PostImageProcessor extends AbstractProcessor {
 			if (imagetype == null) {
 				imagetype = "images/jpeg";
 			}
-			
+
+			String headername = flowFile.getAttribute("headername");
+			if (headername == null) {
+				headername = context.getProperty("headername").evaluateAttributeExpressions(flowFile).getValue();
+			}
+
+			String headervalue = flowFile.getAttribute("headervalue");
+			if (headervalue == null) {
+				headervalue = context.getProperty("headervalue").evaluateAttributeExpressions(flowFile).getValue();
+			}
+
+			String basicusername = flowFile.getAttribute("basicusername");
+			if (basicusername == null) {
+				basicusername = context.getProperty("basicusername").evaluateAttributeExpressions(flowFile).getValue();
+			}
+
+			String basicpassword = flowFile.getAttribute("basicpassword");
+			if (basicpassword == null) {
+				basicpassword = context.getProperty("basicpassword").evaluateAttributeExpressions(flowFile).getValue();
+			}
+
 			final String url = urlName;
 			final String field = fieldname;
 			final String image = imagename;
 			final String imgtype = imagetype;
-			
+			final String headerName = headername;
+			final String headerValue = headervalue;
+			final String basicUserName = basicusername;
+			final String basicPassword = basicpassword;
+
 			try {
 				final HashMap<String, String> attributes = new HashMap<String, String>();
 
@@ -186,7 +237,7 @@ public class PostImageProcessor extends AbstractProcessor {
 						if ( input == null ) { 
 							return;
 						}
-						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input);
+						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input, headerName, headerValue, basicUserName, basicPassword);
 						
 						if (results != null && results.getJsonResultBody() != null) {
 							try {
@@ -200,7 +251,6 @@ public class PostImageProcessor extends AbstractProcessor {
 						}
 						else {
 							try {
-								System.out.println("====> url" + url + "," + field + ","+ image + "," + imgtype );
 								attributes.put(ATTRIBUTE_OUTPUT_NAME, "Fail");
 								attributes.put(ATTRIBUTE_OUTPUT_HEADER, "Fail");
 								attributes.put(ATTRIBUTE_OUTPUT_STATUS, "FAIL");

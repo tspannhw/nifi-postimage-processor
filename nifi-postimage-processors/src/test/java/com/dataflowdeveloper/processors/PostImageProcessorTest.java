@@ -58,14 +58,16 @@ public class PostImageProcessorTest {
      */
     @Test
     public void testProcessor() {
-//    	testRunner.setProperty("url", "http://127.0.0.1:9999/squeezenet/predict");
-//    	testRunner.setProperty("fieldname", "data");
+//    	testRunner.setProperty("url", "https://api.imgur.com/3/upload");
+//    	testRunner.setProperty("fieldname", "image");
 //    	testRunner.setProperty("imagename", "IMG_2596.jpg");
 //    	testRunner.setProperty("imagetype", "image/jpeg");
-//    
-//    	testRunner.enqueue(this.getClass().getClassLoader().getResourceAsStream("IMG_2596.jpg"));
-//    	
-//    	runAndAssertHappy();
+//		testRunner.setProperty("headername", "Authorization");
+//		testRunner.setProperty("headervalue", "Client-ID abc");
+
+    //	testRunner.enqueue(this.getClass().getClassLoader().getResourceAsStream("IMG_2596.jpg"));
+
+    //	runAndAssertHappy();
     }
 
     /**
@@ -79,17 +81,17 @@ public class PostImageProcessorTest {
 		List<MockFlowFile> successFiles = testRunner.getFlowFilesForRelationship(PostImageProcessor.REL_SUCCESS);
 
 		for (MockFlowFile mockFile : successFiles) {
+			Map<String, String> attributes =  mockFile.getAttributes();
+
+			for (String attribute : attributes.keySet()) {
+				System.out.println("Attribute:" + attribute + " = " + mockFile.getAttribute(attribute));
+			}
+
 //			assertEquals("giant panda", mockFile.getAttribute("label_1"));
 //			assertEquals("95.23%", mockFile.getAttribute("probability_1"));
 			assertNotNull(mockFile.getAttribute("post.header"));
 			assertNotNull(mockFile.getAttribute("post.results"));
 			assertEquals("OK", mockFile.getAttribute("post.status"));
-			
-			Map<String, String> attributes =  mockFile.getAttributes();
-			
-			 for (String attribute : attributes.keySet()) {				 
-				 System.out.println("Attribute:" + attribute + " = " + mockFile.getAttribute(attribute));
-			 }
 		}
 
 	}

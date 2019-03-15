@@ -19,7 +19,7 @@
     <parent>
         <groupId>com.dataflowdeveloper</groupId>
         <artifactId>postimage</artifactId>
-        <version>1.0</version>
+        <version>1.1</version>
     </parent>
 
     <artifactId>nifi-postimage-processors</artifactId>
@@ -33,7 +33,7 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-utils</artifactId>
-            <version>1.7.1</version>
+            <version>1.9.0</version>
         </dependency>
  <dependency>
     <groupId>com.mashape.unirest</groupId>
@@ -64,7 +64,7 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-mock</artifactId>
-            <version>1.7.1</version>
+            <version>1.9.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
