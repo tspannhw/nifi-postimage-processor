@@ -1,12 +1,12 @@
 all:
-	rm nifi-postimage-nar-1.1.nar -f
+	rm ./extensions/nifi-postimage-nar-1.1.nar -f
 	mvn clean install -DskipTests
-	cp nifi-postimage-nar/target/nifi-postimage-nar-1.1.nar ./
+	cp nifi-postimage-nar/target/nifi-postimage-nar-1.1.nar ./extensions/
 
 login:
 	docker exec -it --user root nifipostimageprocessor_nifi_1 /bin/bash
 
-clean:
+docker:
 	docker-compose rm -f
 	docker volume prune -f
 	docker-compose build
