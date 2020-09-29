@@ -35,32 +35,31 @@
             <artifactId>nifi-utils</artifactId>
             <version>1.9.0</version>
         </dependency>
- <dependency>
-    <groupId>com.mashape.unirest</groupId>
-    <artifactId>unirest-java</artifactId>
-    <version>1.4.9</version>
+        <dependency>
+            <groupId>com.konghq</groupId>
+            <artifactId>unirest-java</artifactId>
+        <version>3.7.02</version>
 </dependency>
 <dependency>
   <groupId>org.apache.httpcomponents</groupId>
   <artifactId>httpclient</artifactId>
-  <version>4.3.6</version>
+  <version>4.5.12</version>
 </dependency>
 <dependency>
   <groupId>org.apache.httpcomponents</groupId>
   <artifactId>httpasyncclient</artifactId>
-  <version>4.0.2</version>
+  <version>4.1.4</version>
 </dependency>
 <dependency>
   <groupId>org.apache.httpcomponents</groupId>
   <artifactId>httpmime</artifactId>
-  <version>4.3.6</version>
+  <version>4.5.12</version>
 </dependency>
 <dependency>
   <groupId>org.json</groupId>
   <artifactId>json</artifactId>
-  <version>20140107</version>
+  <version>20190722</version>
 </dependency>
-
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-mock</artifactId>
