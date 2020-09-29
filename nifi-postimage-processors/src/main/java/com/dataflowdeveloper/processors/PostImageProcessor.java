@@ -41,14 +41,20 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import kong.unirest.Unirest;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+
 
 @Tags({"post images"})
 @CapabilityDescription("Post Image to HTTP")
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute="url, fieldname, imagename, imagetype, headername, headervalue, basicusername, basicuserpassword", description="Need URL, Field Name, Image Name and Image Type.  Headers and User information is additional.")})
+
 @WritesAttributes({@WritesAttribute(attribute="post.results, post.header, post.status, post.statuscode", description="Output result of HTTP Post call.")})
 public class PostImageProcessor extends AbstractProcessor {
 
@@ -141,6 +147,8 @@ public class PostImageProcessor extends AbstractProcessor {
 		relationships.add(REL_SUCCESS);
 		relationships.add(REL_FAILURE);
 		this.relationships = Collections.unmodifiableSet(relationships);
+
+		Unirest.config().verifySsl(false);
     }
 
     @Override
@@ -159,6 +167,16 @@ public class PostImageProcessor extends AbstractProcessor {
     }
 
     @Override
+protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+    return new PropertyDescriptor.Builder()
+            .description("Specifies the value for '" + propertyDescriptorName
+                    + "' property to be set on the provided ConnectionFactory implementation.")
+            .name(propertyDescriptorName).addValidator(StandardValidators.NON_EMPTY_VALIDATOR).dynamic(true)
+            .build();
+  }
+
+
+    @Override
     public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
         FlowFile flowFile = session.get();
         if ( flowFile == null ) {
@@ -166,6 +184,8 @@ public class PostImageProcessor extends AbstractProcessor {
         }
 		try {
 			flowFile.getAttributes();
+
+
 			
 			String urlName = flowFile.getAttribute("url");
 			if (urlName == null) {
@@ -230,6 +250,16 @@ public class PostImageProcessor extends AbstractProcessor {
 
 			try {
 				final HashMap<String, String> attributes = new HashMap<String, String>();
+				final Map<String, Object> fields = new HashMap<>();
+
+			           for (PropertyDescriptor entry : context.getProperties().keySet()) {
+                			if (entry.isDynamic()) {
+                    				if(!fields.containsKey(entry.getName())) {
+							String keyvalue = context.getProperty(entry.getName()).evaluateAttributeExpressions(flowFile).getValue();
+                       					fields.put(entry.getName(), keyvalue);
+                   				 }
+                			}
+            			}
 
 				session.read(flowFile, new InputStreamCallback() {
 					@Override
@@ -237,27 +267,28 @@ public class PostImageProcessor extends AbstractProcessor {
 						if ( input == null ) { 
 							return;
 						}
-						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input, headerName, headerValue, basicUserName, basicPassword);
+						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input, headerName, headerValue, basicUserName, basicPassword, fields);
 						
-						if (results != null && results.getJsonResultBody() != null) {
-							try {
-								attributes.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
-								attributes.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
-								attributes.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
-								attributes.put(ATTRIBUTE_OUTPUT_STATUS_CODE, String.valueOf(results.getStatusCode()));
-							} catch (Exception e) {
-								e.printStackTrace();
+						if (results != null) 
+						{
+							if (results.getStatusCode() >= 200 && results.getStatusCode() < 300) 
+							{
+								try {
+									attributes.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
+									attributes.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
+									attributes.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
+									attributes.put(ATTRIBUTE_OUTPUT_STATUS_CODE, String.valueOf(results.getStatusCode()));
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+							else
+							{
+								getLogger().error("Response Code:" + String.valueOf(results.getStatusCode()));
 							}
 						}
 						else {
-							try {
-								attributes.put(ATTRIBUTE_OUTPUT_NAME, "Fail");
-								attributes.put(ATTRIBUTE_OUTPUT_HEADER, "Fail");
-								attributes.put(ATTRIBUTE_OUTPUT_STATUS, "FAIL");
-								attributes.put(ATTRIBUTE_OUTPUT_STATUS_CODE, "500");
-							} catch (Exception e) {
-								e.printStackTrace();
-							}							
+							getLogger().error("Unable to process Post Image Processor file");
 						}
 					}
 				});
