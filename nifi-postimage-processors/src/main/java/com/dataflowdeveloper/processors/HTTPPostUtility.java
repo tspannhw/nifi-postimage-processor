@@ -3,12 +3,13 @@ package com.dataflowdeveloper.processors;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.http.entity.ContentType;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-
+//import org.apache.http.entity.ContentType;
+import kong.unirest.Unirest;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+import kong.unirest.ContentType;
 /**
  * 
  * @author tspann
@@ -34,7 +35,7 @@ public class HTTPPostUtility {
 	 */
 	public static HTTPPostResults postImage(String urlName, String fieldName, String imageName, String imageType,
 											InputStream stream, String headerName, String headerValue,
-											String basicUsername, String basicPassword) {
+											String basicUsername, String basicPassword, Map<String, Object> fields) {
 
 		if ( urlName == null || fieldName == null || imageName == null || imageType == null || stream == null ) {
 			return null;
@@ -60,20 +61,41 @@ public class HTTPPostUtility {
 			 .header("accept", "application/json")
 
 			*/
-			Unirest.setTimeouts(90000, 180000);
+		//	Unirest.setTimeouts(90000, 180000); //setTimeouts MUST only be used one time. It create a new client-pool and leaves the old client-pool dangling == memory leak
+			//Unirest.verifySsl(false);
+//			Unirest.config().verifySsl(false);
 			
 			HttpResponse<JsonNode> resp = null;
 
 			if (headerName == null || headerName.length() <= 0 || headerValue == null || headerValue.length() <= 0) {
-				resp = Unirest.post(urlName)
-						.field(fieldName, stream, ContentType.parse(imageType), imageName)
+				if(imageType != null && imageType.length() > 0)
+				{
+					resp = Unirest.post(urlName).fields(fields)
+						.field(fieldName, stream, ContentType.create(imageType) ,imageName)
 						.asJson();
+				}
+				else
+				{
+					resp = Unirest.post(urlName).fields(fields)
+						.field(fieldName, stream ,imageName)
+						.asJson();
+				}
 			}
 			else {
-				resp = Unirest.post(urlName)
-						.header(headerName,headerValue)
-						.field(fieldName, stream, ContentType.parse(imageType), imageName)
+				if(imageType != null && imageType.length() > 0)
+				{
+					resp = Unirest.post(urlName)
+						.header(headerName,headerValue).fields(fields)
+						.field(fieldName, stream, ContentType.create(imageType), imageName)
 						.asJson();
+				}
+				else
+				{
+					resp = Unirest.post(urlName)
+						.header(headerName,headerValue).fields(fields)
+						.field(fieldName, stream, imageName)
+						.asJson();
+				}
 			}
 
 			if (resp.getBody() != null && resp.getBody().getArray() != null && resp.getBody().getArray().length() > 0) {

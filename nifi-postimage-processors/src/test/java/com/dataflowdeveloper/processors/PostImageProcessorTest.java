@@ -29,9 +29,9 @@ import org.apache.nifi.util.TestRunners;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
+import kong.unirest.Unirest;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
 
 /**
  * 
@@ -58,16 +58,16 @@ public class PostImageProcessorTest {
      */
     @Test
     public void testProcessor() {
-//    	testRunner.setProperty("url", "https://api.imgur.com/3/upload");
-//    	testRunner.setProperty("fieldname", "image");
-//    	testRunner.setProperty("imagename", "IMG_2596.jpg");
-//    	testRunner.setProperty("imagetype", "image/jpeg");
+    	testRunner.setProperty("url", "http://postman-echo.com/post");
+    	testRunner.setProperty("fieldname", "avatar");
+    	testRunner.setProperty("imagename", "IMG_2596.jpg");
+    	testRunner.setProperty("imagetype", "image/jpeg");
 //		testRunner.setProperty("headername", "Authorization");
 //		testRunner.setProperty("headervalue", "Client-ID abc");
 
-    //	testRunner.enqueue(this.getClass().getClassLoader().getResourceAsStream("IMG_2596.jpg"));
+    	testRunner.enqueue(this.getClass().getClassLoader().getResourceAsStream("IMG_2596.jpg"));
 
-    //	runAndAssertHappy();
+    	runAndAssertHappy();
     }
 
     /**
@@ -92,7 +92,7 @@ public class PostImageProcessorTest {
 			assertNotNull(mockFile.getAttribute("post.header"));
 			assertNotNull(mockFile.getAttribute("post.results"));
 			assertEquals("OK", mockFile.getAttribute("post.status"));
+			assertEquals("200", mockFile.getAttribute("post.statuscode"));
 		}
-
 	}
 }
