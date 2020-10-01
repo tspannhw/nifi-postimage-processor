@@ -58,7 +58,7 @@ public class PostImageProcessorTest {
      */
     @Test
     public void testProcessor() {
-    	testRunner.setProperty("url", "http://localhost:8080/upload");
+    	testRunner.setProperty("url", "http://postman-echo.com/post");
     	testRunner.setProperty("fieldname", "avatar");
     	testRunner.setProperty("imagename", "IMG_2596.jpg");
     	testRunner.setProperty("imagetype", "image/jpeg");
@@ -92,7 +92,7 @@ public class PostImageProcessorTest {
 			assertNotNull(mockFile.getAttribute("post.header"));
 			assertNotNull(mockFile.getAttribute("post.results"));
 			assertEquals("OK", mockFile.getAttribute("post.status"));
+			assertEquals("200", mockFile.getAttribute("post.statuscode"));
 		}
-
 	}
 }

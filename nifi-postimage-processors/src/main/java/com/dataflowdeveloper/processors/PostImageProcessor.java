@@ -69,7 +69,7 @@ public class PostImageProcessor extends AbstractProcessor {
 
 	/** output attribute name post.statuscode will contain JSON **/
 	public static final String ATTRIBUTE_OUTPUT_STATUS_CODE = "post.statuscode";
-	
+
 	/** url http://127.0.0.1:9999/squeezenet/predict  */
 	public static final PropertyDescriptor URL_NAME = new PropertyDescriptor.Builder().name("url")
 			.description("URL Name like http://127.0.0.1:9999/squeezenet/predict").required(true)
@@ -249,7 +249,8 @@ protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String 
 			final String basicPassword = basicpassword;
 
 			try {
-				final HashMap<String, String> attributes = new HashMap<String, String>();
+				final HashMap<String, String> passed = new HashMap<String, String>();
+				final HashMap<String, String> failed = new HashMap<String, String>();
 				final Map<String, Object> fields = new HashMap<>();
 
 			           for (PropertyDescriptor entry : context.getProperties().keySet()) {
@@ -268,23 +269,30 @@ protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String 
 							return;
 						}
 						HTTPPostResults results = HTTPPostUtility.postImage(url, field, image, imgtype, input, headerName, headerValue, basicUserName, basicPassword, fields);
-						
 						if (results != null) 
 						{
 							if (results.getStatusCode() >= 200 && results.getStatusCode() < 300) 
 							{
 								try {
-									attributes.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
-									attributes.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
-									attributes.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
-									attributes.put(ATTRIBUTE_OUTPUT_STATUS_CODE, String.valueOf(results.getStatusCode()));
+									passed.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
+									passed.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
+									passed.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
+									passed.put(ATTRIBUTE_OUTPUT_STATUS_CODE, String.valueOf(results.getStatusCode()));
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
 							}
 							else
 							{
-								getLogger().error("Response Code:" + String.valueOf(results.getStatusCode()));
+								try {
+									getLogger().error("Response Code:" + String.valueOf(results.getStatusCode()));
+									failed.put(ATTRIBUTE_OUTPUT_NAME, results.getJsonResultBody());
+									failed.put(ATTRIBUTE_OUTPUT_HEADER, results.getHeader());
+									failed.put(ATTRIBUTE_OUTPUT_STATUS, results.getStatus());
+									failed.put(ATTRIBUTE_OUTPUT_STATUS_CODE, String.valueOf(results.getStatusCode()));
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
 							}
 						}
 						else {
@@ -292,11 +300,12 @@ protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String 
 						}
 					}
 				});
-				if (attributes.size() == 0) {
-					session.transfer(flowFile, REL_FAILURE);
-				} else {
-					flowFile = session.putAllAttributes(flowFile, attributes);
+				if (failed.size() == 0 && passed.size() > 0) {
+					flowFile = session.putAllAttributes(flowFile, passed);
 					session.transfer(flowFile, REL_SUCCESS);
+				} else {
+					flowFile = session.putAllAttributes(flowFile, failed);
+					session.transfer(flowFile, REL_FAILURE);
 				}
 			} catch (Exception e) {
 				throw new ProcessException(e);
