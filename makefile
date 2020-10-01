@@ -1,13 +1,17 @@
 all:
 	rm ./extensions/nifi-postimage-nar-1.1.nar -f
-	mvn clean install -DskipTests
+	docker run -v m2:/root/.m2/ -v ${PWD}:/data/ -it jlrigau/maven-git /usr/bin/mvn -f /data/ install -e
 	cp nifi-postimage-nar/target/nifi-postimage-nar-1.1.nar ./extensions/
 
-login:
-	docker exec -it --user root nifipostimageprocessor_nifi_1 /bin/bash
+clean: 
+	rm ./extensions/nifi-postimage-nar-1.1.nar -f
+	docker run -v m2:/root/.m2/ -v ${PWD}:/data/ -it jlrigau/maven-git /usr/bin/mvn -f /data/ clean -e
 
 docker:
-	docker-compose rm -f
-	docker volume prune -f
-	docker-compose build
+	rm ./extensions/nifi-postimage-nar-1.1.nar -f
+	docker run -v m2:/root/.m2/ -v ${PWD}:/data/ -it jlrigau/maven-git /usr/bin/mvn -f /data/ install -e
+	cp nifi-postimage-nar/target/nifi-postimage-nar-1.1.nar ./extensions/
+	chmod 777 ./extensions/ -R
+	docker-compose stop
+	docker-compose down
 	docker-compose up
